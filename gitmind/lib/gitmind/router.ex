@@ -15,19 +15,34 @@ defmodule Gitmind.Router do
 
   # Daily/Hourly Cron trigger from Supabase pg_cron
   post "/api/internal/daily-cron" do
-    now = DateTime.utc_now()
+    cron_secret = System.get_env("CRON_SECRET")
+    auth_header = Plug.Conn.get_req_header(conn, "authorization") |> List.first()
 
-    # Query all active due cards
-    query = from(c in Card, where: c.next_review_at <= ^now)
-    due_cards = Repo.all(query)
+    cond do
+      is_binary(cron_secret) and cron_secret != "" and auth_header != "Bearer #{cron_secret}" ->
+        send_resp(conn, 401, "Unauthorized")
 
-    # Send each due card to its respective user via Discord DMs
-    Enum.each(due_cards, fn card ->
-      DiscordClient.send_review_card_to_user(card.user_id, card.id, card.fact)
-    end)
+      true ->
+        now = DateTime.utc_now()
 
-    IO.puts("Triggered reviews for #{length(due_cards)} cards.")
-    send_resp(conn, 200, "Triggered reviews for #{length(due_cards)} cards.")
+        # Query all active due cards
+        query = from(c in Card, where: c.next_review_at <= ^now)
+        due_cards = Repo.all(query)
+
+        # Send each due card to its respective user concurrently via Discord DMs
+        due_cards
+        |> Task.async_stream(
+          fn card ->
+            DiscordClient.send_review_card_to_user(card.user_id, card.id, card.fact)
+          end,
+          max_concurrency: 5,
+          on_timeout: :kill_task
+        )
+        |> Stream.run()
+
+        IO.puts("Triggered reviews for #{length(due_cards)} cards.")
+        send_resp(conn, 200, "Triggered reviews for #{length(due_cards)} cards.")
+    end
   end
 
   match _ do

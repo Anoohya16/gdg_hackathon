@@ -113,12 +113,20 @@ defmodule Gitmind.DiscordGateway do
          "token" => token,
          "type" => 3,
          "message" => message,
-         "data" => %{"custom_id" => callback_data},
-         "user" => %{"id" => user_id}
-       }, state) do
+         "data" => %{"custom_id" => callback_data}
+       } = data, state) do
+
+    user_id =
+      case Map.get(data, "user") || Map.get(data, "member") do
+        %{"user" => %{"id" => id}} -> id
+        %{"id" => id} -> id
+        _ -> nil
+      end
 
     Task.start(fn ->
-      handle_button_click(interaction_id, token, message, callback_data, user_id)
+      if user_id do
+        handle_button_click(interaction_id, token, message, callback_data, user_id)
+      end
     end)
 
     {:ok, state}

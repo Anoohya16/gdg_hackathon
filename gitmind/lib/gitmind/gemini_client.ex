@@ -1,8 +1,6 @@
 defmodule Gitmind.GeminiClient do
   require Logger
 
-  @api_url "https://genergenerativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-
   @doc """
   Slices the given text into an array of atomic facts.
   """
