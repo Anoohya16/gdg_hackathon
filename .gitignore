@@ -1,0 +1,22 @@
+# Environment files (contains secrets)
+.env
+.env.local
+.env.test
+.env.dev
+
+# Elixir/Mix build and dependency directories
+deps/
+_build/
+
+# Erlang crash dumps
+erl_crash.dump
+*.dump
+
+# Elixir Language Server cache
+.elixir_ls/
+
+# Editor/IDE configurations
+.vscode/
+.idea/
+*.swp
+*~
