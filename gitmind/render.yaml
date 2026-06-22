@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gitmind-discord-bot
+    name: synapse-discord-bot
     env: elixir
     # The build command installs package managers, fetches dependencies, and compiles the app
     buildCommand: mix local.hex --force && mix local.rebar --force && mix deps.get && mix compile
