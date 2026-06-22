@@ -20,3 +20,6 @@ erl_crash.dump
 .idea/
 *.swp
 *~
+
+# Local copied Erlang distribution
+erlang_otp/
